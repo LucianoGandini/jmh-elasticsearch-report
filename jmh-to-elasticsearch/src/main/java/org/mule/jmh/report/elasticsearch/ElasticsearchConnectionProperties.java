@@ -5,18 +5,8 @@ public class ElasticsearchConnectionProperties {
 
   private String userName;
   private String password;
-  private int port = 9200;
+  private int port;
   private String hostname;
-
-  public ElasticsearchConnectionProperties() {
-    this("localhost", null, null);
-  }
-
-  public ElasticsearchConnectionProperties(String hostname, String userName, String password) {
-    this.hostname = hostname;
-    this.userName = userName;
-    this.password = password;
-  }
 
   public ElasticsearchConnectionProperties(String hostname, int port, String userName, String password) {
     this.hostname = hostname;

@@ -30,7 +30,7 @@ public class ElasticsearchReportGeneratorMojo extends AbstractMojo {
   private String host;
 
   @Parameter(defaultValue = "9200")
-  private String port;
+  private int port;
 
   @Parameter
   private String userName;
@@ -38,9 +38,12 @@ public class ElasticsearchReportGeneratorMojo extends AbstractMojo {
   @Parameter
   private String userPassword;
 
+  @Parameter
+  private String version = "${project.version}" ;
+
   public void execute() throws MojoExecutionException, MojoFailureException {
     try {
-      new ElasticsearchReporter().createReport(reportPath, index, new ElasticsearchConnectionProperties(host, userName, userPassword));
+      new ElasticsearchReporter().createReport(reportPath, index, version, new ElasticsearchConnectionProperties(host, port, userName, userPassword));
     } catch (FileNotFoundException e) {
       throw new MojoExecutionException("Report : " + reportPath + " was not found.", e);
     }

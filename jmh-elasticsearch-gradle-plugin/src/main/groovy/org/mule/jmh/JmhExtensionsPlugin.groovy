@@ -13,7 +13,7 @@ class JmhExtensionsPlugin implements Plugin<Project> {
             ElasticsearchReportExtension configuration = project.elasticsearchReport
             configuration.index = configuration.index ?: "/" + project.name + "/jmh/"
             project.logger.info 'Using this configuration:\n{}', configuration
-            new ElasticsearchReporter().createReport(project.buildDir.absolutePath + "/" + configuration.reportPath, configuration.index, new ElasticsearchConnectionProperties(configuration.host, configuration.userName, configuration.userPassword))
+            new ElasticsearchReporter().createReport(project.buildDir.absolutePath + "/" + configuration.reportPath, configuration.index, version, new ElasticsearchConnectionProperties(configuration.host, configuration.port, configuration.userName, configuration.userPassword))
         }
         task.group = "jmh"
         task.description = "Parse the json result and inserts it inside an elasticsearch."

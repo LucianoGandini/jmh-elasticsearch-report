@@ -24,23 +24,30 @@ import org.json.simple.parser.ParseException;
 
 public class ElasticsearchReporter {
 
+  private static final String NON_GIT = "NON_GIT_PROJECT";
+  protected static final String BEGINNINGS_OF_TIME = "1970-01-01 00:00:00 +0000";
+
   /**
    * Inserts the repo inside the
    *
    * @param jsonReport JMH json file path
    * @param index The index name where the measurements are being stored
-   * @param connectionProperties The elastisearch connection properties
-   * @throws FileNotFoundException
+   * @param version
+   * @param connectionProperties The elastisearch connection properties @throws FileNotFoundException
    */
-  public void createReport(String jsonReport, String index, ElasticsearchConnectionProperties connectionProperties)
+  public void createReport(String jsonReport, String index, String version,
+                           ElasticsearchConnectionProperties connectionProperties)
       throws IOException, ParseException, InterruptedException {
+
     final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-    credentialsProvider.setCredentials(AuthScope.ANY,
-                                       new UsernamePasswordCredentials(connectionProperties.getUserName(),
-                                                                       connectionProperties.getPassword()));
+    if (connectionProperties.getUserName() != null) {
+      credentialsProvider.setCredentials(AuthScope.ANY,
+                                         new UsernamePasswordCredentials(connectionProperties.getUserName(),
+                                                                         connectionProperties.getPassword()));
+    }
 
     RestClient restClient = RestClient.builder(
-        new HttpHost(connectionProperties.getHostname(), connectionProperties.getPort()))
+                                               new HttpHost(connectionProperties.getHostname(), connectionProperties.getPort()))
         .setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
 
           @Override
@@ -58,7 +65,8 @@ public class ElasticsearchReporter {
 
     JSONArray jsonArray = (JSONArray) obj;
 
-    String hash = calculateGitHash();
+    String git_hash = calculateGitHash();
+    String git_stamp = calculateGitTimestamp();
     String date = Instant.now().toString();
 
     Iterator<JSONObject> it = jsonArray.iterator();
@@ -67,8 +75,10 @@ public class ElasticsearchReporter {
       JSONObject jsonObject = it.next();
 
       // Add git hash commit
-      jsonObject.put("git", hash);
+      jsonObject.put("git_hash", git_hash);
+      jsonObject.put("git_timestamp", git_stamp);
       jsonObject.put("timestamp", date);
+      jsonObject.put("version", version);
       String benchmkark = (String) jsonObject.get("benchmark");
       String[] all = benchmkark.split("[.]");
       jsonObject.put("benchmark_full_name", String.format("%s.%s", all[all.length - 2], all[all.length - 1]));
@@ -84,6 +94,19 @@ public class ElasticsearchReporter {
   private String calculateGitHash() throws IOException, InterruptedException {
     Process exec = Runtime.getRuntime().exec("git rev-parse HEAD");
     exec.waitFor();
+    if ( exec.exitValue() != 0) {
+      return NON_GIT;
+    }
+    InputStream output = exec.getInputStream();
+    return new BufferedReader(new InputStreamReader(output)).readLine();
+  }
+
+  private String calculateGitTimestamp() throws IOException, InterruptedException {
+    Process exec = Runtime.getRuntime().exec("git show -s --format=%ci | cat");
+    exec.waitFor();
+    if ( exec.exitValue() != 0) {
+      return BEGINNINGS_OF_TIME;
+    }
     InputStream output = exec.getInputStream();
     return new BufferedReader(new InputStreamReader(output)).readLine();
   }
@@ -92,16 +115,18 @@ public class ElasticsearchReporter {
     if (args.length == 5) {
       final String reportPath = args[0];
       final String index = args[1];
-      final String host = args[2];
-      final String port = args[3];
-      final String username = args[4];
-      final String password = args[5];
+      final String version = args[2];
+      final String host = args[3];
+      final String port = args[4];
+      final String username = args[5];
+      final String password = args[6];
       new ElasticsearchReporter()
-          .createReport(reportPath, "/" + index.toLowerCase() + "/jmh/",
+          .createReport(reportPath, "/" + index.toLowerCase() + "/jmh/", version,
                         new ElasticsearchConnectionProperties(host, Integer.getInteger(port), username, password));
       System.out.print("Result inserted successfully.");
     } else {
-      System.err.println("Expecting 6 parameters <reportPath> <indexName> <host> <port> <userName> <userPassword>");
+      System.err
+          .println("Expecting 6 parameters <reportPath> <indexName> <featureVersion> <host> <port> <userName> <userPassword>");
     }
 
   }
