@@ -18,10 +18,10 @@
 
     <parent>
         <groupId>org.mule.jmh</groupId>
-        <artifactId>jmh-elasticearch-report-parent</artifactId>
+        <artifactId>jmh-elasticsearch-report-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
-    <artifactId>jmh-elasticearch-report</artifactId>
+    <artifactId>jmh-elasticsearch-report</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.elasticsearch.client</groupId>

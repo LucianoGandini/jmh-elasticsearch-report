@@ -14,7 +14,7 @@ class ElasticsearchReportExtension {
 
     @Override
     public String toString() {
-        return "InfluxReportExtension{" +
+        return "ElasticsearchReportExtension{" +
                 "reportPath='" + reportPath + '\'' +
                 ", index='" + index + '\'' +
                 ", version='" + version + '\'' +
