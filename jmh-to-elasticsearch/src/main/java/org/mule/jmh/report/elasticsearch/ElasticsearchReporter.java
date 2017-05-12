@@ -15,12 +15,12 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.nio.entity.NStringEntity;
+import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 public class ElasticsearchReporter {
 
@@ -37,7 +37,8 @@ public class ElasticsearchReporter {
    */
   public void createReport(String jsonReport, String index, String version,
                            ElasticsearchConnectionProperties connectionProperties)
-      throws IOException, ParseException, InterruptedException {
+      throws Exception
+  {
 
     final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
     if (connectionProperties.getUserName() != null) {
@@ -87,7 +88,11 @@ public class ElasticsearchReporter {
 
       // index the document
       HttpEntity entity = new NStringEntity(jsonObject.toString(), ContentType.APPLICATION_JSON);
-      restClient.performRequest("POST", index, Collections.<String, String>emptyMap(), entity);
+      Response r = restClient.performRequest("POST", index, Collections.<String, String>emptyMap(), entity);
+      if (r.getStatusLine().getStatusCode() >= 300) {
+        throw new Exception(String.format("Failed to upload report, got %i c ode with Cause: %s ",
+            r.getStatusLine().getStatusCode(),r.getStatusLine().getReasonPhrase()));
+      }
     }
   }
 
@@ -111,7 +116,8 @@ public class ElasticsearchReporter {
     return new BufferedReader(new InputStreamReader(output)).readLine();
   }
 
-  public static void main(String[] args) throws IOException, ParseException, InterruptedException {
+  public static void main(String[] args) throws Exception
+  {
     if (args.length == 5) {
       final String reportPath = args[0];
       final String index = args[1];

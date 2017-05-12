@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -20,7 +21,7 @@ import org.json.simple.parser.ParseException;
 @Execute(goal = "generate-report")
 public class ElasticsearchReportGeneratorMojo extends AbstractMojo {
 
-  @Parameter(defaultValue = "${project.build.outputDirectory}/reports/jmh/results.json")
+  @Parameter(defaultValue = "${project.build.outputDirectory}/jmh-result.json")
   private String reportPath;
 
   @Parameter(defaultValue = "/${project.artifactId}/jmh/")
@@ -42,8 +43,11 @@ public class ElasticsearchReportGeneratorMojo extends AbstractMojo {
   private String version = "${project.version}" ;
 
   public void execute() throws MojoExecutionException, MojoFailureException {
+    Log log = getLog();
     try {
+      log.info(String.format("Creating report from %s and uploading to index: %s.",reportPath,index));
       new ElasticsearchReporter().createReport(reportPath, index, version, new ElasticsearchConnectionProperties(host, port, userName, userPassword));
+      log.info("Uploaded report succesfully.");
     } catch (FileNotFoundException e) {
       throw new MojoExecutionException("Report : " + reportPath + " was not found.", e);
     }

@@ -1,10 +1,6 @@
 import org.mule.jmh.report.elasticsearch.ElasticsearchConnectionProperties;
 import org.mule.jmh.report.elasticsearch.ElasticsearchReporter;
 
-import java.io.IOException;
-
-import org.json.simple.parser.ParseException;
-
 
 public class SimpleTest {
 
@@ -25,15 +21,7 @@ public class SimpleTest {
       reporter.createReport(REPORT_PATH, INDEX, VERSION, connectionProperties);
       System.out.println("Finished uploading report.");
     }
-    catch (IOException e)
-    {
-      e.printStackTrace();
-    }
-    catch (ParseException e)
-    {
-      e.printStackTrace();
-    }
-    catch (InterruptedException e)
+    catch (Exception e)
     {
       e.printStackTrace();
     }
